@@ -19,9 +19,9 @@ class TaskService
         return $this->repository->find($id);
     }
 
-    public function getAllTasks()
+    public function getTaskList(array $filters = [])
     {
-        return $this->repository->all();
+        return $this->repository->getList($filters);
     }
 
     public function createTask(array $data): Task

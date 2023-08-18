@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
+use App\Models\Task;
 use App\Services\TaskService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class TaskController extends Controller
@@ -15,9 +17,10 @@ class TaskController extends Controller
      *
      * @return \App\Http\Resources\TaskCollection
      */
-    public function index(TaskService $service)
+    public function index(Request $request, TaskService $service)
     {
-        $tasks = $service->getAllTasks();
+        $this->authorize('viewAny', Task::class);
+        $tasks = $service->getTaskList(['user_id' => auth()->user()->id]);
 
         return TaskResource::collection($tasks);
     }
@@ -30,7 +33,8 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, TaskService $service)
     {
-        $task = $service->createTask($request->validated());
+        $this->authorize('create', Task::class);
+        $task = $service->createTask(array_merge($request->validated(), ['user_id' => auth()->user()->id]));
 
         return (new TaskResource($task))->response()->setStatusCode(Response::HTTP_CREATED);
     }
@@ -44,6 +48,7 @@ class TaskController extends Controller
     public function show(int $taskId, TaskService $service)
     {
         $task = $service->getTaskById($taskId);
+        $this->authorize('view', $task);
 
         return new TaskResource($task);
     }
@@ -57,6 +62,10 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, int $taskId, TaskService $service)
     {
+        $task = $service->getTaskById($taskId);
+
+        $this->authorize('update', $task);
+
         $task = $service->updateTask($taskId, $request->validated());
 
         return new TaskResource($task);
@@ -70,6 +79,10 @@ class TaskController extends Controller
      */
     public function destroy(int $taskId, TaskService $service)
     {
+        $task = $service->getTaskById($taskId);
+
+        $this->authorize('delete', $task);
+
         $result = $service->deleteTask($taskId);
 
         return response()->json(['result' => $result]);

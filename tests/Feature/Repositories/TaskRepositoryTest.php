@@ -56,13 +56,13 @@ class TaskRepositoryTest extends TestCase
 
     /**
      * @test
-     * @covers ::all
+     * @covers ::getList
      */
-    public function testAll()
+    public function testGetList()
     {
         Task::factory(5)->create();
 
-        $tasks = $this->repository->all();
+        $tasks = $this->repository->getList();
 
         $this->assertCount(5, $tasks);
     }

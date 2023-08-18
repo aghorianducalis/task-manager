@@ -8,9 +8,16 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements TaskRepositoryInterface
 {
-    public function all()
+    public function getList(array $filters = [])
     {
-        return Task::all();
+        $query = Task::query();
+
+        // todo improve filters
+        foreach ($filters as $field => $value) {
+            $query->where($field, $value);
+        }
+
+        return $query->get();
     }
 
     public function find($id)

@@ -35,7 +35,6 @@ class UpdateTaskRequest extends FormRequest
             ],
             'status'      => 'in:' . implode(',', TaskStatusEnum::getStatusValues()),
             'due_date'    => 'date',
-            'user_id'     => 'required|exists:users,id',
         ];
     }
 }

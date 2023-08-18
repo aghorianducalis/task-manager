@@ -47,13 +47,13 @@ class TaskServiceTest extends TestCase
 
     /**
      * @test
-     * @covers ::getAllTasks
+     * @covers ::getTaskList
      */
     public function testGetAllTasks()
     {
         Task::factory(5)->create();
 
-        $tasks = $this->service->getAllTasks();
+        $tasks = $this->service->getTaskList();
 
         $this->assertCount(5, $tasks);
     }
