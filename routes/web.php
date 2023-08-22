@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\TaskController;
+use App\Http\Controllers\PageController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,19 +15,31 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Auth::routes();
 
-Route::namespace('tasks')
-    /*->middleware('')*/
-    ->name('tasks')
-    ->prefix('tasks')
-    ->as('tasks.')
+Route::namespace('pages')
+    ->name('pages')
+    ->as('pages.')
     ->group(function () {
-        Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::post('/', [TaskController::class, 'store'])->name('store');
-        Route::get('/{id}', [TaskController::class, 'show'])->name('show');
-        Route::put('/{id}', [TaskController::class, 'update'])->name('update');
-        Route::delete('/{id}', [TaskController::class, 'destroy'])->name('destroy');
+
+        Route::get('/', [PageController::class, 'welcome'])->name('welcome');
+
+        Route::middleware('auth')
+            ->group(function () {
+                Route::get('/home', [PageController::class, 'home'])->name('home');
+
+                Route::namespace('tasks')
+                    ->name('tasks')
+                    ->prefix('tasks')
+                    ->as('tasks.')
+                    ->group(function () {
+                        Route::get('/', [PageController::class, 'taskIndex'])->name('index');
+                        Route::get('/show/{id}', [PageController::class, 'taskShow'])->name('show');
+                        Route::get('/create', [PageController::class, 'taskCreate'])->name('create');
+                        Route::get('/edit/{id}', [PageController::class, 'taskEdit'])->name('edit');
+                        Route::post('/', [PageController::class, 'taskStore'])->name('store');
+                        Route::put('/{id}', [PageController::class, 'taskUpdate'])->name('update');
+                        Route::delete('{id}', [PageController::class, 'taskDestroy'])->name('destroy');
+                    });
+            });
     });

@@ -36,7 +36,6 @@ class StoreTaskRequest extends FormRequest
             ],
             'status'      => 'required|in:' . implode(',', TaskStatusEnum::getStatusValues()),
             'due_date'    => 'required|date',
-            'user_id'     => 'required|exists:users,id',
         ];
     }
 }

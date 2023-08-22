@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Tests\TestCase;
 
 /**
@@ -22,14 +23,32 @@ class TaskControllerTest extends TestCase
      */
     public function testIndex()
     {
-        Task::factory(3)->create();
+        $user = User::factory()->create();
+        $tasks = Task::factory(3)->create(['user_id' => $user->id]);
 
-        $response = $this->get(route('tasks.index'));
+        $response = $this->actingAs($user)->get(route('tasks.index'));
 
         $response->assertOk();
         $response->assertJsonCount(3, 'data');
     }
 
+    /**
+     * @test
+     * @covers ::index
+     */
+    public function testIndexUserCannotViewOtherUsersTasks()
+    {
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        $taskOfUser2 = Task::factory()->create(['user_id' => $user2->id]);
+
+        $this->actingAs($user1);
+
+        $response = $this->get(route('tasks.index'));
+
+        $response->assertDontSeeText($taskOfUser2->title);
+    }
 
     /**
      * @test
@@ -37,9 +56,11 @@ class TaskControllerTest extends TestCase
      */
     public function testCreate()
     {
-        $taskData = Task::factory()->make()->toArray();
+        $user = User::factory()->create();
+        $task = Task::factory()->make();
+        $taskData = Arr::except($task->toArray(), ['user_id']);
 
-        $response = $this->postJson(route('tasks.store'), $taskData);
+        $response = $this->actingAs($user)->postJson(route('tasks.store'), $taskData);
 
         $response->assertStatus(201)
             ->assertJsonFragment($taskData);
@@ -52,9 +73,10 @@ class TaskControllerTest extends TestCase
      */
     public function testShow()
     {
-        $task = Task::factory()->create();
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $user->id]);
 
-        $response = $this->get(route('tasks.show', $task->id));
+        $response = $this->actingAs($user)->get(route('tasks.show', $task->id));
 
         $response->assertStatus(200)
             ->assertJsonFragment(['id' => $task->id]);
@@ -67,15 +89,15 @@ class TaskControllerTest extends TestCase
      */
     public function testUpdate()
     {
-        $taskData = Task::factory()->create();
         $user = User::factory()->create();
+        $taskData = Task::factory()->create(['user_id' => $user->id]);
         $updatedData = [
             'title'       => 'Updated Title',
             'description' => 'Updated Description',
             'user_id'     => $user->id,
         ];
 
-        $response = $this->putJson(route('tasks.update', $taskData->id), $updatedData);
+        $response = $this->actingAs($user)->putJson(route('tasks.update', $taskData->id), $updatedData);
 
         $response->assertStatus(200)
             ->assertJsonFragment($updatedData);
@@ -88,9 +110,10 @@ class TaskControllerTest extends TestCase
      */
     public function testDestroy()
     {
-        $task = Task::factory()->create();
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $user->id]);
 
-        $response = $this->deleteJson(route('tasks.destroy', $task->id));
+        $response = $this->actingAs($user)->deleteJson(route('tasks.destroy', $task->id));
 
         $response->assertStatus(200)
             ->assertExactJson(['result' => true]);
